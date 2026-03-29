@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Network Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="main">
+
+<h1>Network Dashboard</h1>
+<p style="opacity:0.6;">Real-Time Latency Monitoring System</p>
+
+<div class="grid">
+    <div class="card"><span>Primary Server</span><p id="g">--</p></div>
+    <div class="card"><span>Secondary Server</span><p id="c">--</p></div>
+    <div class="card"><span>Average Latency (ms)</span><p id="avg">--</p></div>
+    <div class="card"><span>Download Speed</span><p id="d">--</p></div>
+    <div class="card"><span>Upload Speed</span><p id="u">--</p></div>
+    <div class="card"><span>Network Status</span><p id="status">--</p></div>
+    <div class="card"><span>Suggestion</span><p id="suggestion">--</p></div>
+</div>
+
+<canvas id="chart"></canvas>
+
+<div id="alert"></div>
+
+<button onclick="downloadReport()">⬇ Download Report</button>
+
+</div>
+
+<script>
+let chart;
+
+async function fetchData(){
+    const res = await fetch('/data');
+    const data = await res.json();
+
+    document.getElementById("g").innerText = data.google ? Number(data.google).toFixed(2)+" ms" : "--";
+    document.getElementById("c").innerText = data.cloudflare ? Number(data.cloudflare).toFixed(2)+" ms" : "--";
+    document.getElementById("avg").innerText = data.avg ? Number(data.avg).toFixed(2)+" ms" : "--";
+    document.getElementById("d").innerText = data.download ? Number(data.download).toFixed(2)+" Mbps" : "--";
+    document.getElementById("u").innerText = data.upload ? Number(data.upload).toFixed(2)+" Mbps" : "--";
+
+    // ✅ FIXED STATUS
+    document.getElementById("status").innerText = data.status || "--";
+    document.getElementById("suggestion").innerText = data.suggestion || "--";
+
+    // color + alert
+    if(data.avg > 100){
+        document.getElementById("avg").style.color = "red";
+        document.getElementById("alert").innerText = "⚠️ High Network Congestion!";
+    }
+    else if(data.avg > 50){
+        document.getElementById("avg").style.color = "orange";
+        document.getElementById("alert").innerText = "";
+    }
+    else{
+        document.getElementById("avg").style.color = "lime";
+        document.getElementById("alert").innerText = "";
+    }
+
+    updateChart(data.history);
+}
+
+function updateChart(data){
+    if(!chart){
+        const ctx = document.getElementById('chart').getContext('2d');
+
+        const gradient = ctx.createLinearGradient(0,0,0,400);
+        gradient.addColorStop(0,"#38bdf8");
+        gradient.addColorStop(1,"#0ea5e9");
+
+        chart = new Chart(ctx,{
+            type:'line',
+            data:{
+                labels:data.map((_,i)=>i+1),
+                datasets:[{
+                    label:'Latency (ms)',
+                    data:data,
+                    borderColor:"#38bdf8",
+                    backgroundColor:gradient,
+                    fill:true,
+                    tension:0.4
+                }]
+            }
+        });
+    } else {
+        chart.data.labels = data.map((_,i)=>i+1);
+        chart.data.datasets[0].data = data;
+        chart.update();
+    }
+}
+
+setInterval(fetchData,1500);
+fetchData();
+
+function downloadReport(){
+    window.location.href = "/download";
+}
+</script>
+
+</body>
+</html>
