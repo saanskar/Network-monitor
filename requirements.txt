@@ -1,3 +1,4 @@
 flask
-speedtest-cli
 ping3
+speedtest-cli
+gunicorn
