@@ -16,10 +16,15 @@ cached_upload = None
 
 def get_latency(url):
     try:
+        headers = {"User-Agent": "Mozilla/5.0"}
         start = time.time()
-        requests.get(url, timeout=2)
+        response = requests.get(url, headers=headers, timeout=3)
         end = time.time()
-        return round((end - start) * 1000, 2)
+
+        if response.status_code == 200:
+            return round((end - start) * 1000, 2)
+        else:
+            return None
     except:
         return None
 
@@ -40,8 +45,8 @@ def get_speed():
 
 
 def get_status(latency):
-    if latency is None:
-        return "Error ❌"
+    if latency is None or latency == 0:
+        return "Checking..."
     elif latency < 50:
         return "Stable 🟢"
     elif latency < 100:
@@ -70,20 +75,21 @@ def home():
 def data():
     global latency_history
 
-    g = get_latency("https://www.google.com")
-    c = get_latency("https://www.cloudflare.com")
+    g = get_latency("https://example.com")
+    c = get_latency("https://httpbin.org/get")
 
     avg = None
     if g is not None and c is not None:
         avg = round((g + c) / 2, 2)
 
-    if avg is not None:
-        latency_history.append(avg)
-        if len(latency_history) > 20:
-            latency_history.pop(0)
-
-    download, upload = get_speed()
-
+    # Always push value (even fallback)
+if avg is None:
+    avg = 0
+    latency_history.append(avg)
+    if len(latency_history) > 20:
+        latency_history.pop(0)
+        download, upload = get_speed()
+        
     return jsonify({
         "google": g,
         "cloudflare": c,
