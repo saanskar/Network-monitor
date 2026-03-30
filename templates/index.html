@@ -7,21 +7,22 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* ── Variables ─────────────────────────────────── */
 :root {
-  --bg:       #020617;
-  --sidebar:  #070f20;
-  --card:     #0d1526;
-  --card-h:   #111d33;
-  --border:   rgba(255,255,255,0.07);
-  --text:     #e2e8f0;
-  --muted:    rgba(148,163,184,0.8);
-  --green:    #22c55e;
-  --yellow:   #facc15;
-  --red:      #ef4444;
-  --blue:     #38bdf8;
-  --purple:   #a78bfa;
-  --accent:   #3b82f6;
+  --bg:      #020617;
+  --sidebar: #070f20;
+  --card:    #0d1526;
+  --card-h:  #111d33;
+  --border:  rgba(255,255,255,0.07);
+  --text:    #e2e8f0;
+  --muted:   rgba(148,163,184,0.8);
+  --green:   #22c55e;
+  --yellow:  #facc15;
+  --red:     #ef4444;
+  --blue:    #38bdf8;
+  --purple:  #a78bfa;
+  --cyan:    #06b6d4;
+  --orange:  #fb923c;
+  --accent:  #3b82f6;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -35,7 +36,7 @@ body {
   font-size: 14px;
 }
 
-/* ── Sidebar ───────────────────────────────────── */
+/* ── Sidebar ── */
 .sidebar {
   width: 220px;
   min-height: 100vh;
@@ -51,283 +52,213 @@ body {
   height: 100vh;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 28px;
-}
+.logo { display:flex; align-items:center; gap:10px; margin-bottom:24px; }
 .logo-icon {
-  width: 34px;
-  height: 34px;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
+  width:34px; height:34px;
+  background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:17px;
 }
-.logo-name  { font-size: 14px; font-weight: 700; }
-.logo-ver   { font-size: 11px; color: var(--muted); }
+.logo-name { font-size:14px; font-weight:700; }
+.logo-ver  { font-size:11px; color:var(--muted); }
 
-/* Live badge */
 .live-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  border-radius: 20px;
-  background: rgba(34,197,94,.08);
-  border: 1px solid rgba(34,197,94,.2);
-  color: var(--green);
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 26px;
+  display:flex; align-items:center; gap:8px;
+  padding:7px 12px; border-radius:20px;
+  background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.2);
+  color:var(--green); font-size:12px; font-weight:500;
+  margin-bottom:24px;
 }
 .pulse-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  flex-shrink: 0;
-  position: relative;
+  width:8px; height:8px; border-radius:50%;
+  background:var(--green); flex-shrink:0; position:relative;
 }
 .pulse-dot::before {
-  content:'';
-  position:absolute; inset:-4px;
-  border-radius:50%;
-  background: var(--green);
-  opacity:.35;
-  animation: ring 1.6s ease-out infinite;
+  content:''; position:absolute; inset:-4px; border-radius:50%;
+  background:var(--green); opacity:.35;
+  animation:ring 1.6s ease-out infinite;
 }
 @keyframes ring {
   0%   { transform:scale(1); opacity:.4; }
   100% { transform:scale(2.4); opacity:0; }
 }
 
-/* Sidebar sections */
-.sb-section { margin-bottom: 22px; }
+.sb-section { margin-bottom:20px; }
 .sb-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--muted);
-  margin-bottom: 10px;
-  opacity: .8;
+  font-size:10px; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--muted);
+  margin-bottom:10px; opacity:.8;
 }
 .sb-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 12.5px;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:7px 0; border-bottom:1px solid var(--border); font-size:12.5px;
 }
-.sb-row:last-child { border-bottom: none; }
-.sb-row span:first-child { color: var(--muted); }
-.sb-val { font-weight: 600; }
+.sb-row:last-child { border-bottom:none; }
+.sb-row span:first-child { color:var(--muted); }
+.sb-val { font-weight:600; }
 
 .sb-footer {
-  margin-top: auto;
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.7;
-  opacity: .7;
+  margin-top:auto; font-size:11px;
+  color:var(--muted); line-height:1.7; opacity:.7;
 }
 
-/* ── Main ──────────────────────────────────────── */
-.main { flex:1; padding: 24px; min-width: 0; }
+/* ── Main ── */
+.main { flex:1; padding:24px; min-width:0; }
 
 .main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 12px;
+  display:flex; justify-content:space-between;
+  align-items:flex-start; margin-bottom:18px;
+  flex-wrap:wrap; gap:12px;
 }
-.main-header h1 { font-size: 21px; font-weight: 700; }
-.main-header p  { font-size: 13px; color: var(--muted); margin-top: 3px; }
+.main-header h1 { font-size:21px; font-weight:700; }
+.main-header p  { font-size:13px; color:var(--muted); margin-top:3px; }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-shrink: 0;
-}
-#last-updated { font-size: 12px; color: var(--muted); }
+.header-right { display:flex; align-items:center; gap:14px; flex-shrink:0; }
+#last-updated  { font-size:12px; color:var(--muted); }
 
 .btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background .15s, transform .1s;
+  padding:8px 16px; border:none; border-radius:8px;
+  font-size:13px; font-weight:600; cursor:pointer;
+  transition:background .15s, transform .1s;
 }
-.btn:active { transform: scale(.97); }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #2563eb; }
+.btn:active { transform:scale(.97); }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#2563eb; }
 
-/* Status bar */
+/* ── Status bar ── */
 .status-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 13px 18px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  display:flex; align-items:center; gap:10px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:13px 18px;
+  margin-bottom:18px; flex-wrap:wrap;
 }
 .status-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: #475569;
-  transition: background .4s, box-shadow .4s;
+  width:10px; height:10px; border-radius:50%;
+  flex-shrink:0; background:#475569;
+  transition:background .4s, box-shadow .4s;
 }
-.status-dot.stable   { background: var(--green);  box-shadow: 0 0 8px var(--green); }
-.status-dot.moderate { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
-.status-dot.congested{ background: var(--red);    box-shadow: 0 0 8px var(--red); }
-#status-text    { font-size: 14px; font-weight: 600; }
-#suggestion-text{
-  font-size: 13px;
-  color: var(--muted);
-  margin-left: auto;
-}
+.status-dot.stable    { background:var(--green);  box-shadow:0 0 8px var(--green); }
+.status-dot.moderate  { background:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+.status-dot.congested { background:var(--red);    box-shadow:0 0 8px var(--red); }
+#status-text     { font-size:14px; font-weight:600; }
+#suggestion-text { font-size:13px; color:var(--muted); margin-left:auto; }
 
-/* ── Cards ─────────────────────────────────────── */
+/* ── Cards grid ── */
 .grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px,1fr));
+  gap:13px;
+  margin-bottom:18px;
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-top: 2px solid var(--c-accent, transparent);
-  border-radius: 14px;
-  padding: 18px;
-  transition: background .2s, transform .2s, box-shadow .2s;
-  cursor: default;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-top:2px solid var(--c-accent, transparent);
+  border-radius:14px; padding:17px;
+  transition:background .2s, transform .2s, box-shadow .2s;
 }
 .card:hover {
-  background: var(--card-h);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  background:var(--card-h);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
 }
 
 .card-label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  font-size:11px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.08em;
+  margin-bottom:12px;
+  display:flex; align-items:center; gap:5px;
 }
-.card-label svg { width:14px; height:14px; opacity:.7; flex-shrink:0; }
+.card-label svg { width:13px; height:13px; opacity:.7; flex-shrink:0; }
 
 .card-value {
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 6px;
-  font-variant-numeric: tabular-nums;
-  transition: color .35s;
+  font-size:26px; font-weight:700; line-height:1;
+  margin-bottom:6px; font-variant-numeric:tabular-nums;
+  transition:color .35s;
 }
-.card-sub { font-size: 11.5px; color: var(--muted); }
+.card-sub { font-size:11.5px; color:var(--muted); }
 
-/* ── Chart ─────────────────────────────────────── */
+/* Speed card: spinning ring while testing */
+.speed-ring {
+  display:inline-block; width:10px; height:10px;
+  border:2px solid var(--muted); border-top-color:transparent;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  vertical-align:middle; margin-left:5px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.speed-ring.done { display:none; }
+
+/* Speed refresh badge */
+.speed-badge {
+  font-size:10px; color:var(--muted);
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:4px; padding:1px 5px;
+  margin-left:4px; vertical-align:middle;
+}
+
+/* ── Chart ── */
 .chart-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:20px;
 }
 .chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  gap: 10px;
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:14px; flex-wrap:wrap; gap:10px;
 }
-.chart-title { font-size: 14px; font-weight: 600; }
-.chart-legend {
-  display: flex;
-  gap: 14px;
-}
-.leg {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--muted);
-}
+.chart-title { font-size:14px; font-weight:600; }
+.chart-legend { display:flex; gap:14px; }
+.leg { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--muted); }
 .leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
-/* ── Toast ─────────────────────────────────────── */
+/* ── Toast ── */
 #toast {
-  position: fixed;
-  bottom: 24px; right: 24px;
-  background: #1e293b;
-  border: 1px solid rgba(239,68,68,.35);
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: var(--red);
-  max-width: 290px;
-  transform: translateY(80px);
-  opacity: 0;
-  transition: all .3s ease;
-  pointer-events: none;
-  z-index: 999;
-  line-height: 1.5;
+  position:fixed; bottom:24px; right:24px;
+  background:#1e293b;
+  border:1px solid rgba(239,68,68,.35);
+  border-radius:10px; padding:12px 16px;
+  font-size:13px; color:var(--red);
+  max-width:290px;
+  transform:translateY(80px); opacity:0;
+  transition:all .3s ease; pointer-events:none;
+  z-index:999; line-height:1.5;
 }
-#toast.show { transform: translateY(0); opacity: 1; }
+#toast.show { transform:translateY(0); opacity:1; }
 
-/* ── Responsive ────────────────────────────────── */
-@media (max-width: 768px) {
-  body { flex-direction: column; }
+/* ── Responsive ── */
+@media (max-width:768px) {
+  body { flex-direction:column; }
   .sidebar {
-    width: 100%;
-    min-height: auto;
-    height: auto;
-    position: static;
-    padding: 14px 16px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
+    width:100%; min-height:auto; height:auto; position:static;
+    padding:14px 16px; flex-direction:row; flex-wrap:wrap;
+    align-items:center; gap:12px;
   }
-  .logo { margin-bottom: 0; }
-  .live-badge { margin-bottom: 0; }
-  .sb-section, .sb-footer { display: none; }
-  .main { padding: 16px; }
-  #suggestion-text { display: none; }
+  .logo { margin-bottom:0; }
+  .live-badge { margin-bottom:0; }
+  .sb-section, .sb-footer { display:none; }
+  .main { padding:14px; }
+  #suggestion-text { display:none; }
 }
-@media (max-width: 480px) {
-  .grid { grid-template-columns: 1fr 1fr; }
-  .card-value { font-size: 22px; }
+@media (max-width:480px) {
+  .grid { grid-template-columns:1fr 1fr; }
+  .card-value { font-size:20px; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- ── Sidebar ─────────────────────────────────── -->
+<!-- ── Sidebar ── -->
 <nav class="sidebar">
   <div class="logo">
     <div class="logo-icon">📡</div>
     <div>
       <div class="logo-name">NetMonitor</div>
-      <div class="logo-ver">v2.0</div>
+      <div class="logo-ver">v2.1</div>
     </div>
   </div>
 
@@ -338,32 +269,34 @@ body {
 
   <div class="sb-section">
     <div class="sb-label">Ping Targets</div>
-    <div class="sb-row"><span>Primary</span>  <span class="sb-val">Google</span></div>
-    <div class="sb-row"><span>Secondary</span><span class="sb-val">Cloudflare</span></div>
-    <div class="sb-row"><span>Interval</span> <span class="sb-val">3 sec</span></div>
-    <div class="sb-row"><span>History</span>  <span class="sb-val">30 pts</span></div>
+    <div class="sb-row"><span>Primary</span>   <span class="sb-val">Google</span></div>
+    <div class="sb-row"><span>Secondary</span> <span class="sb-val">Cloudflare</span></div>
+    <div class="sb-row"><span>Ping interval</span> <span class="sb-val">3 sec</span></div>
+    <div class="sb-row"><span>Speed interval</span><span class="sb-val">20 sec</span></div>
+    <div class="sb-row"><span>History</span>   <span class="sb-val">30 pts</span></div>
   </div>
 
   <div class="sb-section">
     <div class="sb-label">Latency Thresholds</div>
-    <div class="sb-row"><span>Stable</span>  <span class="sb-val" style="color:var(--green)">&lt; 50 ms</span></div>
-    <div class="sb-row"><span>Moderate</span><span class="sb-val" style="color:var(--yellow)">50–150 ms</span></div>
-    <div class="sb-row"><span>Congested</span><span class="sb-val" style="color:var(--red)">&gt; 150 ms</span></div>
+    <div class="sb-row"><span>Stable</span>    <span class="sb-val" style="color:var(--green)">&lt; 50 ms</span></div>
+    <div class="sb-row"><span>Moderate</span>  <span class="sb-val" style="color:var(--yellow)">50–150 ms</span></div>
+    <div class="sb-row"><span>Congested</span> <span class="sb-val" style="color:var(--red)">&gt; 150 ms</span></div>
   </div>
 
   <div class="sb-footer">
     Real-time network congestion monitor.<br>
-    Data refreshes every 3 seconds.
+    Speed test via Cloudflare CDN.<br>
+    Latency refreshes every 3s.
   </div>
 </nav>
 
-<!-- ── Main ───────────────────────────────────── -->
+<!-- ── Main ── -->
 <main class="main">
 
   <div class="main-header">
     <div>
       <h1>Network Dashboard</h1>
-      <p>Real-time latency monitoring across network targets</p>
+      <p>Real-time latency &amp; speed monitoring</p>
     </div>
     <div class="header-right">
       <span id="last-updated">Connecting…</span>
@@ -371,20 +304,21 @@ body {
     </div>
   </div>
 
-  <!-- Status bar -->
   <div class="status-bar">
     <div class="status-dot" id="status-dot"></div>
     <span id="status-text">Connecting…</span>
-    <span id="suggestion-text">Initializing monitor…</span>
+    <span id="suggestion-text">Initializing…</span>
   </div>
 
-  <!-- Metric cards -->
+  <!-- Row 1: Latency cards -->
   <div class="grid">
 
     <div class="card" style="--c-accent:var(--blue)">
       <div class="card-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+          <path d="M2 12h20"/>
         </svg>
         Primary (Google)
       </div>
@@ -395,7 +329,8 @@ body {
     <div class="card" style="--c-accent:var(--purple)">
       <div class="card-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
         </svg>
         Secondary (Cloudflare)
       </div>
@@ -429,12 +364,42 @@ body {
       <div class="card-label">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         Packet Loss
       </div>
       <div class="card-value" id="loss" style="color:var(--red)">--</div>
       <div class="card-sub">failed pings</div>
+    </div>
+
+  </div>
+
+  <!-- Row 2: Speed cards -->
+  <div class="grid" style="grid-template-columns:1fr 1fr; margin-bottom:18px;">
+
+    <div class="card" style="--c-accent:var(--cyan)">
+      <div class="card-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v14"/><path d="M5 15l7 7 7-7"/>
+        </svg>
+        Download Speed
+        <span class="speed-ring" id="dl-ring"></span>
+      </div>
+      <div class="card-value" id="dl" style="color:var(--cyan)">Testing…</div>
+      <div class="card-sub">via Cloudflare CDN &nbsp;<span id="dl-ts" class="speed-badge"></span></div>
+    </div>
+
+    <div class="card" style="--c-accent:var(--orange)">
+      <div class="card-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22V8"/><path d="M5 9l7-7 7 7"/>
+        </svg>
+        Upload Speed
+        <span class="speed-ring" id="ul-ring"></span>
+      </div>
+      <div class="card-value" id="ul" style="color:var(--orange)">Testing…</div>
+      <div class="card-sub">via Cloudflare CDN &nbsp;<span id="ul-ts" class="speed-badge"></span></div>
     </div>
 
   </div>
@@ -454,16 +419,14 @@ body {
 
 </main>
 
-<!-- Toast notification -->
 <div id="toast"></div>
 
 <script>
-// ─── State ──────────────────────────────────────
-let chart = null;
-let toastTimer = null;
+let chart       = null;
+let toastTimer  = null;
 let errorStreak = 0;
+let lastSpeedTs = null;
 
-// ─── Helpers ────────────────────────────────────
 function latencyColor(ms) {
   if (ms === null || ms === undefined) return '#64748b';
   if (ms < 50)  return '#22c55e';
@@ -471,8 +434,19 @@ function latencyColor(ms) {
   return '#ef4444';
 }
 
+function speedColor(mbps) {
+  if (!mbps) return '#64748b';
+  if (mbps >= 10) return '#22c55e';
+  if (mbps >= 4)  return '#facc15';
+  return '#ef4444';
+}
+
 function fmtMs(v) {
   return (v !== null && v !== undefined) ? v.toFixed(1) + ' ms' : 'Timeout';
+}
+
+function fmtMbps(v) {
+  return (v !== null && v !== undefined) ? v.toFixed(2) + ' Mbps' : 'N/A';
 }
 
 function showToast(msg) {
@@ -480,7 +454,7 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 4500);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 5000);
 }
 
 function setStatusDot(status) {
@@ -491,7 +465,6 @@ function setStatusDot(status) {
   if (status === 'Congested') dot.classList.add('congested');
 }
 
-// ─── Fetch & update ─────────────────────────────
 async function fetchData() {
   try {
     const res = await fetch('/data');
@@ -499,7 +472,7 @@ async function fetchData() {
     const d = await res.json();
     errorStreak = 0;
 
-    // Cards
+    // Latency cards
     const gEl = document.getElementById('g');
     gEl.textContent = d.google !== null ? fmtMs(d.google) : 'Timeout';
     gEl.style.color = latencyColor(d.google);
@@ -515,88 +488,107 @@ async function fetchData() {
     document.getElementById('jitter').textContent = d.jitter + ' ms';
     document.getElementById('loss').textContent   = d.packet_loss + '%';
 
-    // Status bar
+    // Speed cards
+    const dlEl   = document.getElementById('dl');
+    const ulEl   = document.getElementById('ul');
+    const dlRing = document.getElementById('dl-ring');
+    const ulRing = document.getElementById('ul-ring');
+    const dlTs   = document.getElementById('dl-ts');
+    const ulTs   = document.getElementById('ul-ts');
+
+    const speedReady = d.download !== null || d.upload !== null;
+
+    if (speedReady) {
+      dlEl.textContent  = fmtMbps(d.download);
+      dlEl.style.color  = speedColor(d.download);
+      ulEl.textContent  = fmtMbps(d.upload);
+      ulEl.style.color  = speedColor(d.upload);
+      dlRing.classList.add('done');
+      ulRing.classList.add('done');
+      if (d.speed_ts) { dlTs.textContent = dlTs.textContent = d.speed_ts; ulTs.textContent = d.speed_ts; }
+
+      // Alert if speed changed significantly
+      if (d.speed_ts && d.speed_ts !== lastSpeedTs) {
+        lastSpeedTs = d.speed_ts;
+        if (d.download !== null && d.download < 2) {
+          showToast('⚠️ Low download speed — ' + fmtMbps(d.download));
+        }
+      }
+    } else {
+      dlEl.textContent = 'Testing…';
+      ulEl.textContent = 'Testing…';
+      dlEl.style.color = '#64748b';
+      ulEl.style.color = '#64748b';
+      dlRing.classList.remove('done');
+      ulRing.classList.remove('done');
+    }
+
+    // Status
     document.getElementById('status-text').textContent    = d.status;
     document.getElementById('suggestion-text').textContent = d.suggestion;
     setStatusDot(d.status);
-
-    // Header timestamp
     document.getElementById('last-updated').textContent = 'Updated ' + d.timestamp;
 
-    // Toast on high congestion (throttled — don't spam)
-    if (d.avg !== null && d.avg > 150) {
-      showToast('⚠️ High congestion — ' + fmtMs(d.avg) + ' avg latency');
-    }
-    if (d.packet_loss === 100) {
-      showToast('❌ Both servers unreachable — check your connection');
-    }
+    // Toasts
+    if (d.avg !== null && d.avg > 150) showToast('⚠️ High congestion — ' + fmtMs(d.avg) + ' avg latency');
+    if (d.packet_loss === 100)         showToast('❌ Both servers unreachable — check your connection');
 
     updateChart(d.history);
+
   } catch (err) {
     errorStreak++;
     if (errorStreak >= 3) {
-      document.getElementById('status-text').textContent = 'Connection Error';
+      document.getElementById('status-text').textContent  = 'Connection Error';
       document.getElementById('last-updated').textContent = 'Fetch failed';
     }
   }
 }
 
-// ─── Chart ──────────────────────────────────────
 function buildChart(history) {
   const labels = history.map(h => h.timestamp);
   const gData  = history.map(h => h.google     || null);
   const cData  = history.map(h => h.cloudflare || null);
   const aData  = history.map(h => h.avg        || null);
 
-  const baseOpts = {
-    spanGaps: true,
-    tension: 0.4,
-    pointRadius: 3,
-    pointHoverRadius: 5,
-    borderWidth: 2,
-  };
+  const base = { spanGaps:true, tension:0.4, pointRadius:3, pointHoverRadius:5, borderWidth:2 };
 
   chart = new Chart(document.getElementById('chart'), {
     type: 'line',
     data: {
       labels,
       datasets: [
-        { ...baseOpts, label:'Google',     data:gData, borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.07)', fill:false },
-        { ...baseOpts, label:'Cloudflare', data:cData, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.07)', fill:false },
-        { ...baseOpts, label:'Average',    data:aData, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',    fill:true, pointRadius:0, borderDash:[5,4] },
+        { ...base, label:'Google',     data:gData, borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.07)',  fill:false },
+        { ...base, label:'Cloudflare', data:cData, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.07)', fill:false },
+        { ...base, label:'Average',    data:aData, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',    fill:true, pointRadius:0, borderDash:[5,4] },
       ],
     },
     options: {
-      responsive: true,
-      animation: { duration: 250 },
-      interaction: { mode:'index', intersect:false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1e293b',
-          borderColor: 'rgba(255,255,255,.1)',
-          borderWidth: 1,
-          titleColor: '#94a3b8',
-          bodyColor: '#e2e8f0',
-          padding: 10,
-          callbacks: {
-            label: ctx =>
-              ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) + ' ms' : 'N/A'}`,
+      responsive:true,
+      animation:{ duration:250 },
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor:'#1e293b',
+          borderColor:'rgba(255,255,255,.1)', borderWidth:1,
+          titleColor:'#94a3b8', bodyColor:'#e2e8f0', padding:10,
+          callbacks:{
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1)+' ms' : 'N/A'}`,
           },
         },
       },
-      scales: {
-        x: {
-          grid:   { color:'rgba(255,255,255,.04)' },
-          ticks:  { color:'#64748b', maxTicksLimit:8, font:{size:11} },
-          border: { color:'rgba(255,255,255,.08)' },
+      scales:{
+        x:{
+          grid:{ color:'rgba(255,255,255,.04)' },
+          ticks:{ color:'#64748b', maxTicksLimit:8, font:{size:11} },
+          border:{ color:'rgba(255,255,255,.08)' },
         },
-        y: {
-          min: 0,
-          grid:   { color:'rgba(255,255,255,.04)' },
-          ticks:  { color:'#64748b', font:{size:11}, callback: v => v + ' ms' },
-          border: { color:'rgba(255,255,255,.08)' },
-          title:  { display:true, text:'Latency (ms)', color:'#64748b', font:{size:11} },
+        y:{
+          min:0,
+          grid:{ color:'rgba(255,255,255,.04)' },
+          ticks:{ color:'#64748b', font:{size:11}, callback: v => v+' ms' },
+          border:{ color:'rgba(255,255,255,.08)' },
+          title:{ display:true, text:'Latency (ms)', color:'#64748b', font:{size:11} },
         },
       },
     },
@@ -610,7 +602,6 @@ function updateChart(history) {
   const aData  = history.map(h => h.avg        || null);
 
   if (!chart) { buildChart(history); return; }
-
   chart.data.labels = labels;
   chart.data.datasets[0].data = gData;
   chart.data.datasets[1].data = cData;
@@ -618,7 +609,6 @@ function updateChart(history) {
   chart.update('none');
 }
 
-// ─── Init ────────────────────────────────────────
 function downloadReport() { window.location.href = '/download'; }
 
 fetchData();
