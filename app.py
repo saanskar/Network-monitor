@@ -1,7 +1,8 @@
 import csv
 import time
 from flask import Flask, jsonify, render_template, send_file
-from ping3 import ping
+import requests
+import time
 import speedtest
 
 app = Flask(__name__)
@@ -13,12 +14,12 @@ cached_download = None
 cached_upload = None
 
 
-def get_latency(server):
+def get_latency(url):
     try:
-        latency = ping(server, timeout=1)
-        if latency is None:
-            return None
-        return round(latency * 1000, 2)
+        start = time.time()
+        requests.get(url, timeout=2)
+        end = time.time()
+        return round((end - start) * 1000, 2)
     except:
         return None
 
@@ -69,8 +70,8 @@ def home():
 def data():
     global latency_history
 
-    g = get_latency("8.8.8.8")
-    c = get_latency("1.1.1.1")
+    g = get_latency("https://www.google.com")
+    c = get_latency("https://www.cloudflare.com")
 
     avg = None
     if g is not None and c is not None:
