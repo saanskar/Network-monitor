@@ -457,12 +457,19 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 5000);
 }
 
-function setStatusDot(status) {
+function setStatusDot(status, isTesting) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot';
-  if (status === 'Stable')    dot.classList.add('stable');
-  if (status === 'Moderate')  dot.classList.add('moderate');
-  if (status === 'Congested') dot.classList.add('congested');
+  if (isTesting) {
+      dot.style.background = 'var(--cyan)';
+      dot.style.boxShadow = '0 0 8px var(--cyan)';
+  } else {
+      dot.style.background = '';
+      dot.style.boxShadow = '';
+      if (status === 'Stable')    dot.classList.add('stable');
+      if (status === 'Moderate')  dot.classList.add('moderate');
+      if (status === 'Congested') dot.classList.add('congested');
+  }
 }
 
 async function fetchData() {
@@ -474,15 +481,15 @@ async function fetchData() {
 
     // Latency cards
     const gEl = document.getElementById('g');
-    gEl.textContent = d.google !== null ? fmtMs(d.google) : 'Timeout';
+    gEl.textContent = fmtMs(d.google);
     gEl.style.color = latencyColor(d.google);
 
     const cEl = document.getElementById('c');
-    cEl.textContent = d.cloudflare !== null ? fmtMs(d.cloudflare) : 'Timeout';
+    cEl.textContent = fmtMs(d.cloudflare);
     cEl.style.color = latencyColor(d.cloudflare);
 
     const avgEl = document.getElementById('avg');
-    avgEl.textContent = d.avg !== null ? fmtMs(d.avg) : 'N/A';
+    avgEl.textContent = fmtMs(d.avg);
     avgEl.style.color = latencyColor(d.avg);
 
     document.getElementById('jitter').textContent = d.jitter + ' ms';
@@ -496,16 +503,24 @@ async function fetchData() {
     const dlTs   = document.getElementById('dl-ts');
     const ulTs   = document.getElementById('ul-ts');
 
-    const speedReady = d.download !== null || d.upload !== null;
+    if (d.is_speed_testing) {
+        dlRing.classList.remove('done');
+        ulRing.classList.remove('done');
+    } else {
+        dlRing.classList.add('done');
+        ulRing.classList.add('done');
+    }
 
-    if (speedReady) {
+    if (d.download !== null || d.upload !== null) {
       dlEl.textContent  = fmtMbps(d.download);
       dlEl.style.color  = speedColor(d.download);
       ulEl.textContent  = fmtMbps(d.upload);
       ulEl.style.color  = speedColor(d.upload);
-      dlRing.classList.add('done');
-      ulRing.classList.add('done');
-      if (d.speed_ts) { dlTs.textContent = dlTs.textContent = d.speed_ts; ulTs.textContent = d.speed_ts; }
+      
+      if (d.speed_ts) { 
+          dlTs.textContent = d.speed_ts; 
+          ulTs.textContent = d.speed_ts; 
+      }
 
       // Alert if speed changed significantly
       if (d.speed_ts && d.speed_ts !== lastSpeedTs) {
@@ -515,23 +530,18 @@ async function fetchData() {
         }
       }
     } else {
-      dlEl.textContent = 'Testing…';
-      ulEl.textContent = 'Testing…';
-      dlEl.style.color = '#64748b';
-      ulEl.style.color = '#64748b';
-      dlRing.classList.remove('done');
-      ulRing.classList.remove('done');
+      dlEl.textContent = 'Awaiting Test...';
+      ulEl.textContent = 'Awaiting Test...';
     }
 
     // Status
-    document.getElementById('status-text').textContent    = d.status;
+    document.getElementById('status-text').textContent     = d.status;
     document.getElementById('suggestion-text').textContent = d.suggestion;
-    setStatusDot(d.status);
+    setStatusDot(d.status, d.is_speed_testing);
     document.getElementById('last-updated').textContent = 'Updated ' + d.timestamp;
 
-    // Toasts
-    if (d.avg !== null && d.avg > 150) showToast('⚠️ High congestion — ' + fmtMs(d.avg) + ' avg latency');
-    if (d.packet_loss === 100)         showToast('❌ Both servers unreachable — check your connection');
+    // Toasts (Only show congestion warning if we aren't actively running a speed test)
+    if (d.avg !== null && d.avg > 150 && !d.is_speed_testing) showToast('⚠️ High congestion — ' + fmtMs(d.avg) + ' avg latency');
 
     updateChart(d.history);
 
@@ -545,21 +555,16 @@ async function fetchData() {
 }
 
 function buildChart(history) {
-  const labels = history.map(h => h.timestamp);
-  const gData  = history.map(h => h.google     || null);
-  const cData  = history.map(h => h.cloudflare || null);
-  const aData  = history.map(h => h.avg        || null);
-
   const base = { spanGaps:true, tension:0.4, pointRadius:3, pointHoverRadius:5, borderWidth:2 };
 
   chart = new Chart(document.getElementById('chart'), {
     type: 'line',
     data: {
-      labels,
+      labels: [],
       datasets: [
-        { ...base, label:'Google',     data:gData, borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.07)',  fill:false },
-        { ...base, label:'Cloudflare', data:cData, borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.07)', fill:false },
-        { ...base, label:'Average',    data:aData, borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',    fill:true, pointRadius:0, borderDash:[5,4] },
+        { ...base, label:'Google',     data:[], borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.07)',  fill:false },
+        { ...base, label:'Cloudflare', data:[], borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,.07)', fill:false },
+        { ...base, label:'Average',    data:[], borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)',    fill:true, pointRadius:0, borderDash:[5,4] },
       ],
     },
     options: {
@@ -573,7 +578,7 @@ function buildChart(history) {
           borderColor:'rgba(255,255,255,.1)', borderWidth:1,
           titleColor:'#94a3b8', bodyColor:'#e2e8f0', padding:10,
           callbacks:{
-            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1)+' ms' : 'N/A'}`,
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1)+' ms' : 'Timeout'}`,
           },
         },
       },
@@ -596,16 +601,14 @@ function buildChart(history) {
 }
 
 function updateChart(history) {
-  const labels = history.map(h => h.timestamp);
-  const gData  = history.map(h => h.google     || null);
-  const cData  = history.map(h => h.cloudflare || null);
-  const aData  = history.map(h => h.avg        || null);
+  if (!chart) buildChart(history);
 
-  if (!chart) { buildChart(history); return; }
-  chart.data.labels = labels;
-  chart.data.datasets[0].data = gData;
-  chart.data.datasets[1].data = cData;
-  chart.data.datasets[2].data = aData;
+  chart.data.labels = history.map(h => h.timestamp);
+  // Replaced || null with ?? null to properly handle 0ms if it ever occurs
+  chart.data.datasets[0].data = history.map(h => h.google ?? null);
+  chart.data.datasets[1].data = history.map(h => h.cloudflare ?? null);
+  chart.data.datasets[2].data = history.map(h => h.avg ?? null);
+  
   chart.update('none');
 }
 
