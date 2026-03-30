@@ -2,34 +2,137 @@
 <html>
 <head>
 <title>Network Dashboard</title>
-<link rel="stylesheet" href="/static/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* {
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background:#020617;
+    color:white;
+    padding:15px;
+}
+
+/* HEADER */
+.header {
+    margin-bottom:20px;
+}
+.header h1 {
+    font-size:24px;
+}
+.header p {
+    opacity:0.6;
+    font-size:14px;
+}
+
+/* GRID */
+.grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+    gap:12px;
+}
+
+/* CARD */
+.card {
+    background:#0f172a;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
+
+.card span {
+    font-size:12px;
+    opacity:0.6;
+}
+
+.card h2 {
+    margin-top:5px;
+    font-size:18px;
+}
+
+/* STATUS COLORS */
+.good { color:#22c55e; }
+.mid { color:#facc15; }
+.bad { color:#ef4444; }
+
+/* CHART */
+.chart-box {
+    margin-top:25px;
+    background:#0f172a;
+    padding:15px;
+    border-radius:12px;
+}
+
+/* BUTTON */
+button {
+    margin-top:20px;
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    background:#22c55e;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+    .header h1 {
+        font-size:20px;
+    }
+    .card h2 {
+        font-size:16px;
+    }
+}
+</style>
 </head>
 
 <body>
 
-<div class="main">
-
-<h1>Network Dashboard</h1>
-<p style="opacity:0.6;">Real-Time Latency Monitoring System</p>
+<div class="header">
+    <h1>📡 Network Dashboard</h1>
+    <p>Real-Time Latency Monitoring System</p>
+</div>
 
 <div class="grid">
-    <div class="card"><span>Primary Server</span><p id="g">--</p></div>
-    <div class="card"><span>Secondary Server</span><p id="c">--</p></div>
-    <div class="card"><span>Average Latency (ms)</span><p id="avg">--</p></div>
-    <div class="card"><span>Download Speed</span><p id="d">--</p></div>
-    <div class="card"><span>Upload Speed</span><p id="u">--</p></div>
-    <div class="card"><span>Network Status</span><p id="status">--</p></div>
-    <div class="card"><span>Suggestion</span><p id="suggestion">--</p></div>
+    <div class="card">
+        <span>Primary Server</span>
+        <h2 id="g">--</h2>
+    </div>
+
+    <div class="card">
+        <span>Secondary Server</span>
+        <h2 id="c">--</h2>
+    </div>
+
+    <div class="card">
+        <span>Average Latency</span>
+        <h2 id="avg">--</h2>
+    </div>
+
+    <div class="card">
+        <span>Status</span>
+        <h2 id="status">--</h2>
+    </div>
+
+    <div class="card">
+        <span>Suggestion</span>
+        <h2 id="suggestion">--</h2>
+    </div>
 </div>
 
-<canvas id="chart"></canvas>
-
-<div id="alert"></div>
+<div class="chart-box">
+    <canvas id="chart"></canvas>
+</div>
 
 <button onclick="downloadReport()">⬇ Download Report</button>
-
-</div>
 
 <script>
 let chart;
@@ -38,28 +141,23 @@ async function fetchData(){
     const res = await fetch('/data');
     const data = await res.json();
 
-    document.getElementById("g").innerText = data.google ? Number(data.google).toFixed(2)+" ms" : "--";
-    document.getElementById("c").innerText = data.cloudflare ? Number(data.cloudflare).toFixed(2)+" ms" : "--";
-    document.getElementById("avg").innerText = data.avg ? Number(data.avg).toFixed(2)+" ms" : "--";
-    document.getElementById("d").innerText = data.download ? Number(data.download).toFixed(2)+" Mbps" : "--";
-    document.getElementById("u").innerText = data.upload ? Number(data.upload).toFixed(2)+" Mbps" : "--";
+    document.getElementById("g").innerText = data.google.toFixed(2)+" ms";
+    document.getElementById("c").innerText = data.cloudflare.toFixed(2)+" ms";
+    document.getElementById("avg").innerText = data.avg.toFixed(2)+" ms";
 
-    // ✅ FIXED STATUS
-    document.getElementById("status").innerText = data.status || "--";
-    document.getElementById("suggestion").innerText = data.suggestion || "--";
+    document.getElementById("status").innerText = data.status;
+    document.getElementById("suggestion").innerText = data.suggestion;
 
-    // color + alert
-    if(data.avg > 100){
-        document.getElementById("avg").style.color = "red";
-        document.getElementById("alert").innerText = "⚠️ High Network Congestion!";
-    }
-    else if(data.avg > 50){
-        document.getElementById("avg").style.color = "orange";
-        document.getElementById("alert").innerText = "";
-    }
-    else{
-        document.getElementById("avg").style.color = "lime";
-        document.getElementById("alert").innerText = "";
+    // Color logic
+    const avg = data.avg;
+    const statusEl = document.getElementById("avg");
+
+    if(avg < 50){
+        statusEl.className = "good";
+    } else if(avg < 100){
+        statusEl.className = "mid";
+    } else {
+        statusEl.className = "bad";
     }
 
     updateChart(data.history);
@@ -67,24 +165,23 @@ async function fetchData(){
 
 function updateChart(data){
     if(!chart){
-        const ctx = document.getElementById('chart').getContext('2d');
-
-        const gradient = ctx.createLinearGradient(0,0,0,400);
-        gradient.addColorStop(0,"#38bdf8");
-        gradient.addColorStop(1,"#0ea5e9");
-
-        chart = new Chart(ctx,{
+        chart = new Chart(document.getElementById('chart'),{
             type:'line',
             data:{
                 labels:data.map((_,i)=>i+1),
                 datasets:[{
-                    label:'Latency (ms)',
                     data:data,
                     borderColor:"#38bdf8",
-                    backgroundColor:gradient,
+                    backgroundColor:"rgba(56,189,248,0.2)",
                     fill:true,
                     tension:0.4
                 }]
+            },
+            options:{
+                responsive:true,
+                plugins:{
+                    legend:{display:false}
+                }
             }
         });
     } else {

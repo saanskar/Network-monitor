@@ -1,19 +1,14 @@
 import csv
 import time
-from flask import Flask, jsonify, render_template, send_file
 import requests
-import time
-import speedtest
+import os
+from flask import Flask, jsonify, render_template, send_file
 
 app = Flask(__name__)
 
 latency_history = []
 
-last_speed_time = 0
-cached_download = None
-cached_upload = None
-
-
+# ---------------- LATENCY FUNCTION ----------------
 def get_latency(url):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -28,24 +23,9 @@ def get_latency(url):
     except:
         return None
 
-
-def get_speed():
-    global last_speed_time, cached_download, cached_upload
-
-    if time.time() - last_speed_time > 25:
-        try:
-            st = speedtest.Speedtest()
-            cached_download = round(st.download()/1_000_000, 2)
-            cached_upload = round(st.upload()/1_000_000, 2)
-            last_speed_time = time.time()
-        except:
-            pass
-
-    return cached_download, cached_upload
-
-
+# ---------------- STATUS ----------------
 def get_status(latency):
-    if latency is None or latency == 0:
+    if latency is None:
         return "Checking..."
     elif latency < 50:
         return "Stable 🟢"
@@ -54,22 +34,21 @@ def get_status(latency):
     else:
         return "High 🔴"
 
-
+# ---------------- SUGGESTION ----------------
 def get_suggestion(latency):
     if latency is None:
-        return "No data available"
+        return "Collecting data..."
     elif latency < 50:
         return "Network is stable 👍"
     elif latency < 100:
-        return "Network is moderate ⚠️"
+        return "Network moderate ⚠️"
     else:
         return "High congestion 🚨 Switch network"
 
-
+# ---------------- ROUTES ----------------
 @app.route("/")
 def home():
     return render_template("index.html")
-
 
 @app.route("/data")
 def data():
@@ -78,29 +57,29 @@ def data():
     g = get_latency("https://example.com")
     c = get_latency("https://httpbin.org/get")
 
-    avg = None
-    if g is not None and c is not None:
-        avg = round((g + c) / 2, 2)
+    # fallback if None
+    if g is None:
+        g = 0
+    if c is None:
+        c = 0
 
-    # Always push value (even fallback)
-if avg is None:
-    avg = 0
+    avg = round((g + c) / 2, 2)
+
+    # update graph
     latency_history.append(avg)
     if len(latency_history) > 20:
         latency_history.pop(0)
-        download, upload = get_speed()
-        
+
     return jsonify({
         "google": g,
         "cloudflare": c,
         "avg": avg,
-        "download": download,
-        "upload": upload,
+        "download": None,
+        "upload": None,
         "status": get_status(avg),
         "suggestion": get_suggestion(avg),
         "history": latency_history
     })
-
 
 @app.route("/download")
 def download():
@@ -112,5 +91,6 @@ def download():
 
     return send_file("report.csv", as_attachment=True)
 
-    if __name__ == "__main__":
-        app.run(host="0.0.0.0", port=10000)
+# ---------------- RUN ----------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
