@@ -82,25 +82,33 @@ def _run_speed_test():
             return
         _speed_cache["is_running"] = True
 
+    dl, ul = None, None
+    ts = datetime.now().strftime("%H:%M:%S")
+
     try:
-        st = speedtest.Speedtest()
-        st.get_best_server()
-        
-        dl_bps = st.download()
-        ul_bps = st.upload()
-        
-        dl = round(dl_bps / 1_000_000, 2) 
-        ul = round(ul_bps / 1_000_000, 2)
-        ts = datetime.now().strftime("%H:%M:%S")
-        
+        # 1. Quick 5MB Download Test
+        start = time.time()
+        # We use a 15-second timeout to ensure it never gets stuck
+        r = requests.get("https://speed.cloudflare.com/__down?bytes=5000000", timeout=15)
+        elapsed = time.time() - start
+        if elapsed > 0.1:
+            dl = round((5000000 * 8) / (elapsed * 1_000_000), 2)
+
+        # 2. Quick 1MB Upload Test
+        start = time.time()
+        requests.post("https://speed.cloudflare.com/__up", data=os.urandom(1024 * 1024), timeout=15)
+        elapsed = time.time() - start
+        if elapsed > 0.1:
+            ul = round((1024 * 1024 * 8) / (elapsed * 1_000_000), 2)
+
     except Exception as e:
-        print(f"Speedtest Failed: {e}")
-        dl, ul, ts = None, None, None
+        print(f"Cloudflare Speedtest Error: {e}")
 
     with _lock:
-        if dl: _speed_cache["download"] = dl
-        if ul: _speed_cache["upload"]   = ul
-        if ts: _speed_cache["speed_ts"] = ts
+        # If the test fails, we force it to 0.0 so the UI doesn't get stuck!
+        _speed_cache["download"] = dl if dl is not None else 0.0
+        _speed_cache["upload"]   = ul if ul is not None else 0.0
+        _speed_cache["speed_ts"] = ts
         _speed_cache["is_running"] = False
 
 def _speed_loop():
