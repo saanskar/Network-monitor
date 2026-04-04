@@ -31,15 +31,18 @@ SERVERS = {
 }
 
 # ─── Latency ──────────────────────────────────────────────────────────────────
+
+ping_session = requests.Session()
+ping_session.headers.update({"User-Agent": "NetMonitor-Agent/2.1"})
+
 def get_latency(url):
     try:
-        domain = url.replace("https://www.", "") 
-        delay = ping(domain, timeout=3)
-        if delay is not None:
-            return round(delay * 1000, 2)
-        return None
-    except Exception as e:
-        print(f"Ping Error: {e}")
+        start = time.time()
+        # Ping the full URL (e.g., "https://www.google.com")
+        r = ping_session.get(url, timeout=3)
+        elapsed = round((time.time() - start) * 1000, 2)
+        return elapsed if r.status_code == 200 else None
+    except requests.RequestException:
         return None
 
 # ─── Speed Test ───────────────────────────────────────────────────────────────
