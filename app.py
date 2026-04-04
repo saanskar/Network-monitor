@@ -41,7 +41,8 @@ def get_latency(url):
 
 # ─── Speed Test ───────────────────────────────────────────────────────────────
 def measure_download():
-    url = "https://speed.cloudflare.com/__down?bytes=10000000"
+    # Changed from 10000000 (10MB) to 5000000 (5MB)
+    url = "https://speed.cloudflare.com/__down?bytes=5000000"
     try:
         start = time.time()
         r = requests.get(url, timeout=30, stream=True)
@@ -51,12 +52,15 @@ def measure_download():
         if elapsed < 0.1 or total_bytes == 0:
             return None
         return round((total_bytes * 8) / (elapsed * 1_000_000), 2)
-    except requests.RequestException:
+    except requests.RequestException as e:
+        # This will print the exact reason it fails in your terminal
+        print(f"⚠️ Download Test Failed: {e}") 
         return None
 
 def measure_upload():
     url  = "https://speed.cloudflare.com/__up"
-    data = os.urandom(4 * 1024 * 1024)
+    # Changed from 4MB to 1MB
+    data = os.urandom(1 * 1024 * 1024)
     try:
         start = time.time()
         requests.post(url, data=data, timeout=30)
@@ -65,7 +69,9 @@ def measure_upload():
         if elapsed < 0.1:
             return None
         return round((len(data) * 8) / (elapsed * 1_000_000), 2)
-    except requests.RequestException:
+    except requests.RequestException as e:
+        # This will print the exact reason it fails in your terminal
+        print(f"⚠️ Upload Test Failed: {e}")
         return None
 
 def _run_speed_test():
