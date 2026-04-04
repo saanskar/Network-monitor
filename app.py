@@ -4,7 +4,6 @@ import os
 import time
 import threading
 import requests
-from ping3 import ping
 from datetime import datetime
 from flask import Flask, jsonify, render_template, send_file
 
@@ -30,10 +29,6 @@ SERVERS = {
 }
 
 # ─── Latency ──────────────────────────────────────────────────────────────────
-
-ping_session = requests.Session()
-ping_session.headers.update({"User-Agent": "NetMonitor-Agent/2.1"})
-
 def get_latency(url):
     try:
         start = time.time()
@@ -44,53 +39,44 @@ def get_latency(url):
     except requests.RequestException:
         return None
 
-# ─── Speed Test ───────────────────────────────────────────────────────────────
-def measure_download():
-    url = "https://speed.cloudflare.com/__down?bytes=5000000"
-    try:
-        start = time.time()
-        r = requests.get(url, timeout=30, stream=True)
-        total_bytes = sum(len(chunk) for chunk in r.iter_content(chunk_size=65536))
-        elapsed = time.time() - start
-        
-        if elapsed < 0.1 or total_bytes == 0:
-            return None
-        return round((total_bytes * 8) / (elapsed * 1_000_000), 2)
-    except requests.RequestException as e:
-        print(f"⚠️ Download Test Failed: {e}") 
-        return None
-
-def measure_upload():
-    url  = "https://speed.cloudflare.com/__up"
-    data = os.urandom(1 * 1024 * 1024)
-    try:
-        start = time.time()
-        requests.post(url, data=data, timeout=30)
-        elapsed = time.time() - start
-        
-        if elapsed < 0.1:
-            return None
-        return round((len(data) * 8) / (elapsed * 1_000_000), 2)
-    except requests.RequestException as e:
-        print(f"⚠️ Upload Test Failed: {e}")
-        return None
-
+# ─── Speed Test (Bulletproof HTTP Approach) ───────────────────────────────────
 def _run_speed_test():
     with _lock:
-        if _speed_cache["is_running"]:
+        if _speed_cache.get("is_running"):
             return
         _speed_cache["is_running"] = True
 
-    time.sleep(3)
-    dl = round(random.uniform(85.0, 115.0), 2) 
-    ul = round(random.uniform(45.0, 65.0), 2)
+    dl, ul = None, None
     ts = datetime.now().strftime("%H:%M:%S")
 
-    with _lock:
-        _speed_cache["download"] = dl
-        _speed_cache["upload"]   = ul
-        _speed_cache["speed_ts"] = ts
-        _speed_cache["is_running"] = False
+    try:
+        # 1. HTTP Download Test (5MB)
+        start = time.time()
+        # Strict 10-second timeout so it NEVER hangs forever
+        r = requests.get("https://speed.cloudflare.com/__down?bytes=5000000", timeout=10)
+        elapsed = time.time() - start
+        if elapsed > 0.1:
+            dl = round((5000000 * 8) / (elapsed * 1_000_000), 2)
+
+        # 2. HTTP Upload Test (1MB)
+        start = time.time()
+        requests.post("https://speed.cloudflare.com/__up", data=os.urandom(1024 * 1024), timeout=10)
+        elapsed = time.time() - start
+        if elapsed > 0.1:
+            ul = round((1024 * 1024 * 8) / (elapsed * 1_000_000), 2)
+
+    except Exception as e:
+        print(f"HTTP Speedtest Error: {e}")
+        dl, ul = 0.0, 0.0  # Force values to zero so the UI shows it failed instead of hanging
+
+    finally:
+        # The 'finally' block ensures that even if the code crashes,
+        # it will ALWAYS release the lock and tell the frontend the test is done.
+        with _lock:
+            _speed_cache["download"] = dl if dl is not None else 0.0
+            _speed_cache["upload"]   = ul if ul is not None else 0.0
+            _speed_cache["speed_ts"] = ts
+            _speed_cache["is_running"] = False
 
 def _speed_loop():
     while True:
