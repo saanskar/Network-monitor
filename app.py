@@ -4,6 +4,8 @@ import os
 import time
 import threading
 import requests
+import speedtest
+from ping3 import ping
 from datetime import datetime
 from flask import Flask, jsonify, render_template, send_file
 
@@ -31,17 +33,17 @@ SERVERS = {
 # ─── Latency ──────────────────────────────────────────────────────────────────
 def get_latency(url):
     try:
-        start = time.time()
-        # Using the session avoids recreating the TCP/TLS handshake every 3 seconds
-        r = ping_session.get(url, timeout=3)
-        elapsed = round((time.time() - start) * 1000, 2)
-        return elapsed if r.status_code == 200 else None
-    except requests.RequestException:
+        domain = url.replace("https://www.", "") 
+        delay = ping(domain, timeout=3)
+        if delay is not None:
+            return round(delay * 1000, 2)
+        return None
+    except Exception as e:
+        print(f"Ping Error: {e}")
         return None
 
 # ─── Speed Test ───────────────────────────────────────────────────────────────
 def measure_download():
-    # Changed from 10000000 (10MB) to 5000000 (5MB)
     url = "https://speed.cloudflare.com/__down?bytes=5000000"
     try:
         start = time.time()
@@ -53,13 +55,11 @@ def measure_download():
             return None
         return round((total_bytes * 8) / (elapsed * 1_000_000), 2)
     except requests.RequestException as e:
-        # This will print the exact reason it fails in your terminal
         print(f"⚠️ Download Test Failed: {e}") 
         return None
 
 def measure_upload():
     url  = "https://speed.cloudflare.com/__up"
-    # Changed from 4MB to 1MB
     data = os.urandom(1 * 1024 * 1024)
     try:
         start = time.time()
@@ -70,30 +70,40 @@ def measure_upload():
             return None
         return round((len(data) * 8) / (elapsed * 1_000_000), 2)
     except requests.RequestException as e:
-        # This will print the exact reason it fails in your terminal
         print(f"⚠️ Upload Test Failed: {e}")
         return None
 
 def _run_speed_test():
     with _lock:
         if _speed_cache["is_running"]:
-            return # Prevent overlapping tests
+            return
         _speed_cache["is_running"] = True
 
-    dl = measure_download()
-    ul = measure_upload()
-    ts = datetime.now().strftime("%H:%M:%S")
+    try:
+        st = speedtest.Speedtest()
+        st.get_best_server()
+        
+        dl_bps = st.download()
+        ul_bps = st.upload()
+        
+        dl = round(dl_bps / 1_000_000, 2) 
+        ul = round(ul_bps / 1_000_000, 2)
+        ts = datetime.now().strftime("%H:%M:%S")
+        
+    except Exception as e:
+        print(f"Speedtest Failed: {e}")
+        dl, ul, ts = None, None, None
 
     with _lock:
-        _speed_cache["download"] = dl
-        _speed_cache["upload"]   = ul
-        _speed_cache["speed_ts"] = ts
+        if dl: _speed_cache["download"] = dl
+        if ul: _speed_cache["upload"]   = ul
+        if ts: _speed_cache["speed_ts"] = ts
         _speed_cache["is_running"] = False
 
 def _speed_loop():
     while True:
         _run_speed_test()
-        time.sleep(30) # Increased interval to reduce artificial congestion
+        time.sleep(30)
 
 threading.Thread(target=_speed_loop, daemon=True).start()
 
@@ -102,7 +112,7 @@ def get_status(avg, packet_loss, is_speed_testing):
     if packet_loss > 80:
         return "Offline"
     if is_speed_testing:
-        return "Testing Bandwidth..." # Contextualize latency spikes
+        return "Testing Bandwidth..."
     if avg is None:
         return "Unreachable"
     if avg < 50 and packet_loss < 5:
